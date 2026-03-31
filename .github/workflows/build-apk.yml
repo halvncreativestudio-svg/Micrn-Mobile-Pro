@@ -2,7 +2,7 @@ name: Build Micrn APK
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -33,6 +33,14 @@ jobs:
 
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
+
+      - name: Initialize Bubblewrap Settings
+        run: |
+          mkdir -p ~/.bubblewrap
+          echo '{
+            "jdkPath": "/usr/lib/jvm/temurin-17-jdk-amd64",
+            "androidSdkPath": "/usr/local/lib/android/sdk"
+          }' > ~/.bubblewrap/settings.json
 
       - name: Create TWA Config
         run: |
@@ -66,7 +74,8 @@ jobs:
 
       - name: Build APK (Bubblewrap)
         run: |
-          bubblewrap build --manifest twa-manifest.json --signingKeyPath ./keystore.jks --signingKeyAlias micrn-key --signingKeyPassword micrnpass --signingKeyAliasPassword micrnpass
+          # Use --skipConfig to bypass the interactive setup wizard
+          bubblewrap build --manifest twa-manifest.json --signingKeyPath ./keystore.jks --signingKeyAlias micrn-key --signingKeyPassword micrnpass --signingKeyAliasPassword micrnpass --skipConfig
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
