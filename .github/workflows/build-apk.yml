@@ -1,0 +1,75 @@
+name: Build Micrn APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Web App
+        run: npm run build
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install Bubblewrap
+        run: npm install -g @bubblewrap/cli
+
+      - name: Create TWA Config
+        run: |
+          echo '{
+            "packageName": "app.micrn.professional",
+            "host": "micrn.app",
+            "name": "Micrn Professional",
+            "launcherName": "Micrn",
+            "display": "standalone",
+            "themeColor": "#0A84FF",
+            "navigationColor": "#080808",
+            "backgroundColor": "#080808",
+            "enableNotifications": true,
+            "startUrl": "/",
+            "iconUrl": "https://micrn-pc.vercel.app/icon-512.png",
+            "maskableIconUrl": "https://micrn-pc.vercel.app/icon-512.png",
+            "splashColor": "#080808",
+            "appVersionCode": 1,
+            "appVersion": "1.0.0",
+            "signingKey": {
+              "path": "./keystore.jks",
+              "alias": "micrn-key"
+            },
+            "webManifestUrl": "https://micrn-web.vercel.app/manifest.json",
+            "fallbackType": "customtabs"
+          }' > twa-manifest.json
+
+      - name: Generate Debug Keystore
+        run: |
+          keytool -genkey -v -keystore keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias micrn-key -storepass micrnpass -keypass micrnpass -dname "CN=Micrn, OU=Voxn, O=Voxn, L=Hooghly, S=WB, C=IN"
+
+      - name: Build APK (Bubblewrap)
+        run: |
+          bubblewrap build --manifest twa-manifest.json --signingKeyPath ./keystore.jks --signingKeyAlias micrn-key --signingKeyPassword micrnpass --signingKeyAliasPassword micrnpass
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Micrn-Professional-APK
+          path: ./*.apk

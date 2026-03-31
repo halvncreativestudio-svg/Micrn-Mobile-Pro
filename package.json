@@ -1,0 +1,13 @@
+{
+  "name": "micrn-web",
+  "version": "1.0.0",
+  "description": "Micrn mobile — Turn your phone into a PC microphone",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host"
+  },
+  "devDependencies": {
+    "vite": "^6.0.3"
+  }
+}
