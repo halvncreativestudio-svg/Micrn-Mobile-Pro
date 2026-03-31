@@ -20,10 +20,12 @@ jobs:
           cache: 'npm'
 
       - name: Install Dependencies
-        run: npm install
+        # Force dev dependencies to ensure Vite is available
+        run: npm install --include=dev
 
       - name: Build Web App
-        run: npm run build
+        # Use npx to ensure the vite binary is found correctly
+        run: npx vite build
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -44,11 +46,12 @@ jobs:
 
       - name: Fix Missing Icons
         run: |
-          # Use placeholder icons if the real ones are missing (to pass the build)
+          # Generate placeholder icons AFTER the build to avoid directory conflicts
+          # These satisfy Bubblewrap's requirement for local icon files
           mkdir -p public
-          curl -L -o public/icon-192.png https://placehold.co/192x192/080808/0A84FF/png?text=Micrn
-          curl -L -o public/icon-512.png https://placehold.co/512x512/080808/0A84FF/png?text=Micrn
-          # Copy to dist for validation
+          curl -L -o public/icon-192.png "https://placehold.co/192x192/080808/0A84FF/png?text=Micrn"
+          curl -L -o public/icon-512.png "https://placehold.co/512x512/080808/0A84FF/png?text=Micrn"
+          # Ensure they are in the dist folder for final packaging
           mkdir -p dist
           cp public/icon-192.png dist/
           cp public/icon-512.png dist/
